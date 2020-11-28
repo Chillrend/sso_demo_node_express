@@ -5,7 +5,7 @@ Repositori ini merupakan contoh penggunaan service *Single Sign-On* Politeknik N
 #### Requirement
 
 - NodeJS versi **12.0.0** direkomendasikan, namun minimal versi **10.19.0 (lts/dubnium)** dibutuhkan.
-
+- Gunakan endpoint method `client_secret_basic` pada saat Anda mendaftarkan client didalam SSO PNJ
 #### Instalasi package
 
 Kami menggunakan `node-openid-client` untuk implementasi pada repositori ini, install dengan :

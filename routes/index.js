@@ -6,8 +6,8 @@ const { generators } = require('openid-client');
 async function getSSOClient(){
   const ssoPnj = await Issuer.discover('https://test.madjavacoder.me:4444');
   return new ssoPnj.Client({
-    client_id: '4a1d09e2-3baa-4426-a624-966ad0edc790',
-    client_secret: 'Sg-q6s_ELm5P9KWF3_cOAZX_p6',
+    client_id: 'adeb55f0-91aa-4e94-9faf-5978533c09f7',
+    client_secret: 'pDAT9Y1XUQewSxRNzY.n1hbvq9',
     redirect_uris: ['http://localhost:3000/cb'],
     response_types: ['code']
   });
