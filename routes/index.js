@@ -4,7 +4,7 @@ const { Issuer } = require('openid-client');
 const { generators } = require('openid-client');
 
 async function getSSOClient(){
-  const ssoPnj = await Issuer.discover('https://test.madjavacoder.me:4444');
+  const ssoPnj = await Issuer.discover('https://auth.pnj.ac.id');
   return new ssoPnj.Client({
     client_id: 'adeb55f0-91aa-4e94-9faf-5978533c09f7',
     client_secret: 'pDAT9Y1XUQewSxRNzY.n1hbvq9',
