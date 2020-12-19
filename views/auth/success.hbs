@@ -1,6 +1,24 @@
-access_token: {{ tokenSet.access_token }}
-refresh_token: {{ tokenSet.refresh_token }}
-id_token: {{ tokenSet.id_token }}
-access_token: {{ tokenSet.access_token }}
-<br />
-get user info <a href="/userinfo">here</a>
+<table class="table-auto">
+    <tr>
+        <td>Access Token</td>
+        <td style="word-break: break-all">{{ tokenSet.access_token }}</td>
+    </tr>
+    <tr>
+        <td>Refresh Token</td>
+        <td style="word-break: break-all">{{ tokenSet.refresh_token }}</td>
+    </tr>
+    <tr>
+        <td>ID Token</td>
+        <td style="word-break: break-all">{{ tokenSet.id_token }}</td>
+    </tr>
+    <tr>
+        <td>User Info</td>
+        <td>
+            <a
+                class="inline-block px-6 py-2 text-xs font-medium leading-6 text-center text-white uppercase transition bg-blue-700 rounded shadow ripple hover:shadow-lg hover:bg-blue-800 focus:outline-none"
+                href="/userinfo">
+                Click here
+            </a>
+        </td>
+    </tr>
+</table>
