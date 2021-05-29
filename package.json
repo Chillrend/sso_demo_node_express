@@ -20,7 +20,7 @@
     "http-errors": "~1.6.3",
     "morgan": "~1.9.1",
     "openid-client": "^4.2.1",
-    "tailwindcss": "^1.9.6"
+    "tailwindcss": "^2.1.2"
   },
   "devDependencies": {
     "eslint": "^7.12.1",

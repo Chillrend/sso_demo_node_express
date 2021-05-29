@@ -6,6 +6,8 @@ Repositori ini merupakan contoh penggunaan service *Single Sign-On* Politeknik N
 
 - NodeJS versi **12.0.0** direkomendasikan, namun minimal versi **10.19.0 (lts/dubnium)** dibutuhkan.
 - Gunakan endpoint method `client_secret_basic` pada saat Anda mendaftarkan client didalam SSO PNJ
+
+Untuk mendaftarkan aplikasi Anda, silahkan buat tiket di https://layanan.pnj.ac.id/
 #### Instalasi package
 
 Kami menggunakan `node-openid-client` untuk implementasi pada repositori ini, install dengan :
@@ -86,8 +88,38 @@ const userinfo = await client.userinfo(req.session.token_set.access_token);
 // tampilkan userinfo ke dalam json
 res.json(userinfo);
 ```
+### OpenID Payload
+Berikut merupakan contoh objek user yang akan diterima ketika parsing `id_token`
+```json
+{
+  "address": "187 Justen Point Suite 090\nWest Shania, TX 99746-9546",
+  "aud": [
+    "a895f57b-561c-44b5-ab17-495272346318"
+  ],
+  "auth_time": 1622287922,
+  "date_of_birth": "1979-03-14",
+  "department_and_level": [
+    {
+      "access_level": 99,
+      "access_level_name": "Admin",
+      "department": "Teknik Informatika dan Komputer",
+      "department_short_name": "TIK"
+    }
+  ],
+  "email": "wilkinson.marquise@example.com",
+  "iat": 1622287930,
+  "ident": 80779, //NIP/NIM, bergantung dengan akses level
+  "iss": "http://localhost:4444/",
+  "name": "Prof. Ivory Ferry",
+  "rat": 1622287922,
+  "sub": "4"
+}
+```
+Untuk menyimpan atau mencocokkan user ke dalam database internal Anda, kami sarankan gunakan value dari `sub`, atau `ident`, karena value tersebut unique dalam setiap user.
 
-Untuk informasi implementasi lebih lanjut silaWhkan membaca dokumentasi dari package `openid-client`
+
+## Lebih lanjut
+Untuk informasi implementasi lebih lanjut tentang OpenID didalam NodeJS silahkan membaca dokumentasi dari package `openid-client`
 
 https://github.com/panva/node-openid-client
 
@@ -102,4 +134,4 @@ https://github.com/panva/node-openid-client
 
 ### Report SSO PNJ Bug
 
-email developer di `farhan@madjavacoder.com` atau submit issues didalam repositori ini.
+email developer di `farhan@pnj.ac.id` atau submit issues didalam repositori ini.
