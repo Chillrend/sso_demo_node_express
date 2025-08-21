@@ -1,65 +1,124 @@
 const express = require('express');
+const client = require('openid-client');
 
 const router = express.Router();
-const { Issuer } = require('openid-client');
-const { generators } = require('openid-client');
+
+const redirectUri = new URL(process.env.OIDC_REDIRECT_URI) || new URL('http://localhost:3000/cb');
+const issuerBaseUrl = new URL(process.env.OIDC_ISSUER) || new URL('https://dev-sso.upatik.io/realms/dev-sso');
+const clientId = process.env.OIDC_CLIENT_ID;
+const clientSecret = process.env.OIDC_CLIENT_SECRET;
+const scopes = process.env.OIDC_SCOPES || 'openid profile email';
 
 async function getSSOClient() {
-  const ssoPnj = await Issuer.discover('http://localhost:4444');
-  return new ssoPnj.Client({
-    client_id: 'a895f57b-561c-44b5-ab17-495272346318',
-    client_secret: 'k15FnZrvwghPawyCoAna6Nhcjo',
-    redirect_uris: ['http://localhost:3000/cb'],
-    response_types: ['code'],
-  });
+  return client.discovery(
+    issuerBaseUrl,
+    clientId,
+    clientSecret,
+  );
 }
 
 /* GET home page. */
-router.get('/', (req, res, next) => {
+router.get('/', (req, res) => {
   res.render('index', { title: 'Express' });
 });
 
-router.get('/login', async (req, res, next) => {
+router.get('/login', (req, res) => {
   res.render('auth/login', { title: 'Login - App' });
 });
 
 router.get('/login/auth/pnj', async (req, res, next) => {
-  const client = await getSSOClient();
+  try {
+    const ssoClient = await getSSOClient();
 
-  const state = generators.state(32);
+    const codeVerifier = client.randomPKCECodeVerifier();
+    const codeChallenge = await client.calculatePKCECodeChallenge(codeVerifier);
+    let state;
 
-  // save the state into session/cookies/or any somewhat secure state storage
-  req.session.oauth_state = state;
+    const parameters = {
+      redirect_uri: redirectUri,
+      scope: scopes,
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
+    };
 
-  const url = client.authorizationUrl({
-    scope: 'openid',
-    redirect_uri: ['http://localhost:3000/cb'],
-    state,
-    code_challenge_method: 'S256',
-    response_type: ['code'],
-  });
+    if (ssoClient.serverMetadata().supportsPKCE()) {
+      state = client.randomState();
+      parameters.state = state;
+    }
 
-  res.redirect(url);
+    req.session.oauth_state = state;
+    req.session.pkce_verifier = codeVerifier;
+
+    const redirectTo = client.buildAuthorizationUrl(ssoClient, parameters);
+
+    res.redirect(redirectTo);
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.get('/cb', async (req, res, next) => {
-  const client = await getSSOClient();
-  const params = client.callbackParams(req);
+  try {
+    const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+    const ssoClient = await getSSOClient();
+    const tokenSet = await client.authorizationCodeGrant(
+      ssoClient,
+      new URL(fullUrl),
+      {
+        pkceCodeVerifier: req.session.pkce_verifier,
+        expectedState: req.session.oauth_state,
+      },
+    );
 
-  const tokenSet = await client.callback('http://localhost:3000/cb', params, { state: req.session.oauth_state });
+    console.log(tokenSet);
 
-  // Store this in your database if you need to refresh the token later
-  req.session.token_set = tokenSet;
+    req.session.token_set = tokenSet;
+    req.session.id_token_claim = tokenSet.claims();
 
-  res.render('auth/success', { title: 'Success!', tokenSet });
+    res.render('auth/success', { title: 'Success!', tokenSet });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/logout', async (req, res, next) => {
+  try {
+    const client = await getSSOClient();
+    const endSessionUrl = client.issuer?.metadata?.end_session_endpoint;
+    const idToken = req.session?.token_set?.id_token;
+    const postLogoutRedirectUri = process.env.OIDC_POST_LOGOUT_REDIRECT_URI || 'http://localhost:3000/';
+
+    req.session.destroy(() => {
+      if (endSessionUrl && idToken) {
+        const url = new URL(endSessionUrl);
+        if (clientId) url.searchParams.set('client_id', clientId);
+        url.searchParams.set('id_token_hint', idToken);
+        url.searchParams.set('post_logout_redirect_uri', postLogoutRedirectUri);
+        return res.redirect(url.toString());
+      }
+      return res.redirect('/');
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.get('/userinfo', async (req, res, next) => {
-  const client = await getSSOClient();
-
-  const userinfo = await client.userinfo(req.session.token_set.access_token);
-
-  res.json(userinfo);
+  try {
+    const tokenSet = req.session.token_set;
+    const idTokenClaim = req.session.id_token_claim;
+    if (!tokenSet) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    const ssoClient = await getSSOClient();
+    console.log(idTokenClaim);
+    const userinfo = await client
+      .fetchUserInfo(ssoClient, tokenSet.access_token, idTokenClaim.sub);
+    console.log(userinfo);
+    return res.json(userinfo);
+  } catch (err) {
+    return next(err);
+  }
 });
 
 module.exports = router;

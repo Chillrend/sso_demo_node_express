@@ -4,10 +4,24 @@ Repositori ini merupakan contoh penggunaan service *Single Sign-On* Politeknik N
 
 #### Requirement
 
-- NodeJS versi **12.0.0** direkomendasikan, namun minimal versi **10.19.0 (lts/dubnium)** dibutuhkan.
+- NodeJS versi **22.x LTS** direkomendasikan (minimal **20.x**).
 - Gunakan endpoint method `client_secret_basic` pada saat Anda mendaftarkan client didalam SSO PNJ
 
 Untuk mendaftarkan aplikasi Anda, silahkan buat tiket di https://layanan.pnj.ac.id/
+### Konfigurasi Keycloak (dev-sso.upatik.io)
+
+Project ini telah dikonfigurasi untuk menggunakan Keycloak pada realm `dev-sso` di `https://dev-sso.upatik.io` melalui OpenID Connect.
+
+1. Salin berkas contoh environment: `cp .env.example .env`
+2. Isi variabel berikut di `.env` sesuai client Anda di Keycloak:
+   - `OIDC_CLIENT_ID`
+   - `OIDC_CLIENT_SECRET` (jika confidential client)
+   - Opsional: `OIDC_REDIRECT_URI` (default `http://localhost:3000/cb`)
+3. Pastikan `Valid Redirect URIs` pada client di Keycloak mencakup `http://localhost:3000/cb` saat pengembangan.
+4. Jalankan aplikasi (lihat bagian Menjalankan project example ini).
+
+Alur login menggunakan Authorization Code + PKCE. Logout akan mengarahkan ke endpoint `end_session` Keycloak dan kembali ke `OIDC_POST_LOGOUT_REDIRECT_URI`.
+
 #### Instalasi package
 
 Kami menggunakan `node-openid-client` untuk implementasi pada repositori ini, install dengan :
@@ -28,7 +42,7 @@ const ssoPnj = await Issuer.discover('https://sso.pnj.ac.id:4444');
 
 // buat instance client dari hasil discover
 const client = new ssoPnj.Client({
-   	// Gunakan credential yang telah anda dapatkan dari SSO PNJ
+  	// Gunakan credential yang telah anda dapatkan dari SSO PNJ
     client_id: '000',
     client_secret: '000',
     // Callback uri harus dimasukkan didalam array
@@ -127,8 +141,10 @@ https://github.com/panva/node-openid-client
 
 ### Menjalankan project example ini
 
-1. `npm install`
-2. `nodemon ./bin/www`
+1. Gunakan Node 22 LTS (contoh dengan nvm): `nvm install 22 && nvm use 22`
+2. `npm install`
+3. Dev server: `npm run dev`
+4. Production: `npm start`
 
 
 

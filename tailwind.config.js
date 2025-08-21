@@ -1,12 +1,7 @@
 module.exports = {
-  future: {
-    // removeDeprecatedGapUtilities: true,
-    // purgeLayersByDefault: true,
-  },
-  purge: [],
+  content: ['./views/**/*.hbs', './public/**/*.html'],
   theme: {
     extend: {},
   },
-  variants: {},
   plugins: [],
-}
+};
